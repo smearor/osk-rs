@@ -3,6 +3,7 @@
 use clap::Parser;
 use gtk4::prelude::*;
 use osk_config::Cli;
+use osk_config::Config;
 use osk_input::ModifierState;
 use osk_input::VirtualKeyboard;
 use osk_input::WaylandVirtualKeyboard;
@@ -13,6 +14,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use tracing::error;
 use tracing::info;
+use tracing::warn;
 
 /// Run the `osk-rs` application.
 pub fn run() {
@@ -26,7 +28,23 @@ pub fn run() {
 
     info!("osk-rs starting up");
 
+    // Load configuration from ~/.config/osk-rs/config.toml (or defaults)
+    let config = match Config::load() {
+        Ok(c) => {
+            info!("Configuration loaded successfully");
+            c
+        }
+        Err(e) => {
+            warn!("Config load failed, using defaults: {e}");
+            Config::default()
+        }
+    };
+
     let app = gtk4::Application::builder().application_id("org.example.OSK").build();
+
+    app.connect_shutdown(move |_| {
+        info!("osk-rs shutting down — releasing resources");
+    });
 
     app.connect_activate(move |app| {
         // Connect to Wayland and bind required globals
@@ -54,7 +72,7 @@ pub fn run() {
         let layout = qwertz_tkl();
 
         // Create the OSK window
-        let window = match OskWindow::new(app, layout) {
+        let window = match OskWindow::new(app, layout, &config.display) {
             Ok(w) => w,
             Err(e) => {
                 error!("Window creation failed: {e}");
@@ -70,10 +88,12 @@ pub fn run() {
         window.render_keys(keyboard, modifier_state);
         window.show();
 
-        info!("osk-rs keyboard visible");
+        info!(
+            "osk-rs keyboard visible (layout={}, size={:?})",
+            config.layout.name.as_deref().unwrap_or("de"),
+            config.display.size
+        );
     });
 
     let _ = app.run();
-
-    info!("osk-rs shutting down");
 }
