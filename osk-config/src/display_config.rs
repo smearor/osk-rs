@@ -2,14 +2,15 @@
 
 use crate::KeyScale;
 use crate::KeyboardHeight;
+use osk_core::SizeVariant;
 use serde::Deserialize;
 use serde::Serialize;
 
 /// Display configuration section.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DisplayConfig {
-    /// Size variant: "compact", "tkl", "full"
-    pub size: Option<String>,
+    /// Size variant
+    pub size: Option<SizeVariant>,
     /// Key scale factor (1.0 = 100%)
     #[serde(default)]
     pub scale: KeyScale,

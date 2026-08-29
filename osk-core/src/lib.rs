@@ -7,6 +7,8 @@
 mod display_mode;
 mod input_type;
 mod key;
+mod key_grid;
+mod key_row;
 mod key_shape;
 mod key_state;
 mod key_type;
@@ -14,11 +16,14 @@ pub mod keycode;
 mod layout_def;
 mod modifier;
 mod size_variant;
+mod xkb_layout;
 mod xkb_variant;
 
 pub use display_mode::DisplayMode;
 pub use input_type::InputType;
 pub use key::Key;
+pub use key_grid::KeyGrid;
+pub use key_row::KeyRow;
 pub use key_shape::KeyShape;
 pub use key_state::KeyState;
 pub use key_type::KeyType;
@@ -26,6 +31,7 @@ pub use keycode::KeyCode;
 pub use layout_def::LayoutDef;
 pub use modifier::Modifier;
 pub use size_variant::SizeVariant;
+pub use xkb_layout::XkbLayout;
 pub use xkb_variant::XkbVariant;
 
 #[cfg(test)]

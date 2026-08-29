@@ -4,10 +4,12 @@ use clap::Parser;
 use gtk4::prelude::*;
 use osk_config::Cli;
 use osk_config::Config;
+use osk_core::SizeVariant;
+use osk_core::XkbLayout;
 use osk_input::ModifierState;
 use osk_input::VirtualKeyboard;
 use osk_input::WaylandVirtualKeyboard;
-use osk_layout::qwertz_tkl;
+use osk_layout::LayoutRegistry;
 use osk_ui::OskWindow;
 use osk_wayland::WaylandContext;
 use std::cell::RefCell;
@@ -40,12 +42,37 @@ pub fn run() {
         }
     };
 
+    // Determine layout: CLI override > config > default "us"
+    let layout = cli.layout.map(XkbLayout::from).or(config.layout.name.clone()).unwrap_or_default();
+
+    // Determine variant: config > default
+    let variant = config.layout.variant.clone().unwrap_or_default();
+
+    // Determine size variant: CLI override > config > default TKL
+    let size_variant = cli
+        .size
+        .and_then(|s| s.parse().ok())
+        .or(config.display.size)
+        .unwrap_or(SizeVariant::Tenkeyless80);
+
+    info!("Using layout: {layout}, variant: {variant}, size: {size_variant}");
+
+    // Build the layout using the layout registry
+    let layout_def = match LayoutRegistry::build_with_variant(layout.clone(), variant, size_variant) {
+        Ok(l) => l,
+        Err(e) => {
+            error!("Failed to build layout '{layout}': {e}, falling back to QWERTY TKL");
+            LayoutRegistry::build(XkbLayout::Us, SizeVariant::Tenkeyless80).unwrap()
+        }
+    };
+
     let app = gtk4::Application::builder().application_id("org.example.OSK").build();
 
     app.connect_shutdown(move |_| {
         info!("osk-rs shutting down — releasing resources");
     });
 
+    let layout_for_log = layout;
     app.connect_activate(move |app| {
         // Connect to Wayland and bind required globals
         let wayland = match WaylandContext::connect() {
@@ -68,11 +95,8 @@ pub fn run() {
             return;
         }
 
-        // Build the QWERTZ TKL layout
-        let layout = qwertz_tkl();
-
         // Create the OSK window
-        let window = match OskWindow::new(app, layout, &config.display) {
+        let window = match OskWindow::new(app, layout_def.clone(), &config.display) {
             Ok(w) => w,
             Err(e) => {
                 error!("Window creation failed: {e}");
@@ -88,11 +112,7 @@ pub fn run() {
         window.render_keys(keyboard, modifier_state);
         window.show();
 
-        info!(
-            "osk-rs keyboard visible (layout={}, size={:?})",
-            config.layout.name.as_deref().unwrap_or("de"),
-            config.display.size
-        );
+        info!("osk-rs keyboard visible (layout={layout_for_log}, size={size_variant})");
     });
 
     let _ = app.run();

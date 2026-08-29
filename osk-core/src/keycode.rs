@@ -234,11 +234,50 @@ pub const KEY_LEFT: KeyCode = KeyCode::new(105);
 pub const KEY_RIGHT: KeyCode = KeyCode::new(106);
 
 /// Print Screen
-pub const KEY_PRINT: KeyCode = KeyCode::new(99);
+pub const KEY_PRINT: KeyCode = KeyCode::new(210);
 /// Scroll Lock
 pub const KEY_SCROLLLOCK: KeyCode = KeyCode::new(70);
 /// Pause / Break
 pub const KEY_PAUSE: KeyCode = KeyCode::new(119);
+/// SysRq (same physical key as Print Screen on most keyboards)
+pub const KEY_SYSRQ: KeyCode = KeyCode::new(99);
+
+/// NumLock
+pub const KEY_NUMLOCK: KeyCode = KeyCode::new(69);
+/// Numpad 0
+pub const KEY_KP0: KeyCode = KeyCode::new(82);
+/// Numpad 1
+pub const KEY_KP1: KeyCode = KeyCode::new(79);
+/// Numpad 2
+pub const KEY_KP2: KeyCode = KeyCode::new(80);
+/// Numpad 3
+pub const KEY_KP3: KeyCode = KeyCode::new(81);
+/// Numpad 4
+pub const KEY_KP4: KeyCode = KeyCode::new(75);
+/// Numpad 5
+pub const KEY_KP5: KeyCode = KeyCode::new(76);
+/// Numpad 6
+pub const KEY_KP6: KeyCode = KeyCode::new(77);
+/// Numpad 7
+pub const KEY_KP7: KeyCode = KeyCode::new(71);
+/// Numpad 8
+pub const KEY_KP8: KeyCode = KeyCode::new(72);
+/// Numpad 9
+pub const KEY_KP9: KeyCode = KeyCode::new(73);
+/// Numpad Enter
+pub const KEY_KPENTER: KeyCode = KeyCode::new(96);
+/// Numpad +
+pub const KEY_KPPLUS: KeyCode = KeyCode::new(78);
+/// Numpad -
+pub const KEY_KPMINUS: KeyCode = KeyCode::new(74);
+/// Numpad *
+pub const KEY_KPASTERISK: KeyCode = KeyCode::new(55);
+/// Numpad /
+pub const KEY_KPSLASH: KeyCode = KeyCode::new(98);
+/// Numpad .
+pub const KEY_KPDOT: KeyCode = KeyCode::new(83);
+/// Numpad =
+pub const KEY_KPEQUAL: KeyCode = KeyCode::new(117);
 
 #[cfg(test)]
 mod tests {

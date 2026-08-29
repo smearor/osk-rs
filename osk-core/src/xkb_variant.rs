@@ -4,7 +4,10 @@
 //! e.g. `nodeadkeys`, `intl`, `qwerty`.
 
 use serde::Deserialize;
+use serde::Deserializer;
 use serde::Serialize;
+use serde::Serializer;
+use std::fmt;
 
 /// XKB layout variant.
 ///
@@ -12,7 +15,7 @@ use serde::Serialize;
 /// [`XkbVariant::Default`] (no variant). Named variants cover the most
 /// common options; [`XkbVariant::Custom`] allows arbitrary XKB variant
 /// strings for less common or future variants.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum XkbVariant {
     /// No variant — the layout's default configuration
     #[default]
@@ -78,5 +81,36 @@ impl From<&str> for XkbVariant {
 impl From<String> for XkbVariant {
     fn from(s: String) -> Self {
         Self::from(s.as_str())
+    }
+}
+
+impl fmt::Display for XkbVariant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.as_str() {
+            Some(s) => write!(f, "{s}"),
+            None => write!(f, "default"),
+        }
+    }
+}
+
+impl Serialize for XkbVariant {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self.as_str() {
+            Some(s) => serializer.serialize_str(s),
+            None => serializer.serialize_str("default"),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for XkbVariant {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(Self::from(s))
     }
 }

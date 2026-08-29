@@ -14,4 +14,10 @@ pub enum ConfigError {
     /// A configuration value is invalid
     #[error("invalid config value: {0}")]
     InvalidValue(String),
+    /// The config file watcher could not be created
+    #[error("config watcher error: {0}")]
+    WatcherError(#[from] notify::Error),
+    /// The system config directory could not be determined
+    #[error("config directory not found")]
+    ConfigDirNotFound,
 }

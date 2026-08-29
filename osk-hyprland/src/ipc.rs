@@ -18,6 +18,7 @@ impl HyprlandIpc {
     pub fn new() -> Self {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         Self {
+            // TODO: This is probably wrong!
             command_socket: format!("{home}/.hypr/.socket.sock"),
             event_socket: format!("{home}/.hypr/.socket2.sock"),
         }

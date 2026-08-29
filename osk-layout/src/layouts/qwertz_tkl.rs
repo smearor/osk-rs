@@ -7,6 +7,7 @@
 use osk_core::Key;
 use osk_core::LayoutDef;
 use osk_core::SizeVariant;
+use osk_core::XkbLayout;
 use osk_core::XkbVariant;
 use osk_core::keycode;
 
@@ -23,7 +24,7 @@ use osk_core::keycode;
 /// Plus a nav cluster and arrow keys for TKL.
 pub fn qwertz_tkl() -> LayoutDef {
     LayoutDef {
-        name: "de".to_string(),
+        name: XkbLayout::De,
         variant: XkbVariant::Default,
         size: SizeVariant::Tenkeyless80,
         rows: vec![
@@ -146,7 +147,8 @@ pub fn qwertz_tkl() -> LayoutDef {
                 Key::special("↓", keycode::KEY_DOWN, 1.0),
                 Key::special("→", keycode::KEY_RIGHT, 1.0),
             ],
-        ],
+        ]
+        .into(),
     }
 }
 
@@ -163,7 +165,7 @@ mod tests {
     #[test]
     fn test_layout_name_is_de() {
         let layout = qwertz_tkl();
-        assert_eq!(layout.name, "de");
+        assert_eq!(layout.name, XkbLayout::De);
     }
 
     #[test]

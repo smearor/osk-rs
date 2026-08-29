@@ -24,15 +24,20 @@ pub struct Config {
 }
 
 impl Config {
-    /// Load configuration from the default path (`~/.config/osk-rs/config.toml`).
+    /// Load configuration from the default config path.
+    ///
+    /// Uses the system config directory (e.g. `~/.config/osk-rs/config.toml`
+    /// on Linux) as determined by the `dirs` crate.
     ///
     /// # Errors
     ///
-    /// Returns `ConfigError` if the file cannot be read or parsed.
+    /// Returns `ConfigError` if the config directory cannot be determined,
+    /// or the file cannot be read or parsed.
     pub fn load() -> Result<Self, ConfigError> {
-        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-        let path = format!("{home}/.config/osk-rs/config.toml");
-        Self::load_from(&path)
+        let config_dir = dirs::config_dir()
+            .ok_or(ConfigError::ConfigDirNotFound)?;
+        let path = config_dir.join("osk-rs").join("config.toml");
+        Self::load_from(path.to_str().unwrap_or(""))
     }
 
     /// Load configuration from a specific file path.

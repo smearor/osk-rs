@@ -21,12 +21,12 @@ use gtk4_layer_shell::LayerShell;
 use osk_config::DisplayConfig;
 use osk_config::KeyboardHeight;
 use osk_core::Key;
+use osk_core::KeyCode;
 use osk_core::KeyShape;
 use osk_core::KeyState;
 use osk_core::KeyType;
 use osk_core::LayoutDef;
 use osk_core::Modifier;
-use osk_core::KeyCode;
 use osk_input::ModifierState;
 use osk_input::VirtualKeyboard;
 use std::cell::RefCell;
@@ -283,11 +283,7 @@ impl OskWindow {
     ///
     /// After `KEY_REPEAT_DELAY_MS`, sends repeated press/release cycles
     /// at `KEY_REPEAT_INTERVAL_MS` intervals until cancelled on release.
-    fn start_key_repeat<V: VirtualKeyboard + 'static>(
-        keyboard: Rc<RefCell<V>>,
-        keycode: KeyCode,
-        repeat_source: Rc<RefCell<Option<SourceId>>>,
-    ) {
+    fn start_key_repeat<V: VirtualKeyboard + 'static>(keyboard: Rc<RefCell<V>>, keycode: KeyCode, repeat_source: Rc<RefCell<Option<SourceId>>>) {
         let repeat_source_inner = repeat_source.clone();
         let source_id = glib::timeout_add_local_once(std::time::Duration::from_millis(KEY_REPEAT_DELAY_MS as u64), move || {
             // Send first repeat immediately
