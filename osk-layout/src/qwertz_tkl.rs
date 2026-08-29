@@ -149,3 +149,111 @@ pub fn qwertz_tkl() -> LayoutDef {
         ],
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_layout_has_6_rows() {
+        let layout = qwertz_tkl();
+        assert_eq!(layout.rows.len(), 6);
+    }
+
+    #[test]
+    fn test_layout_name_is_de() {
+        let layout = qwertz_tkl();
+        assert_eq!(layout.name, "de");
+    }
+
+    #[test]
+    fn test_layout_size_is_tkl() {
+        let layout = qwertz_tkl();
+        assert_eq!(layout.size, SizeVariant::Tenkeyless80);
+    }
+
+    #[test]
+    fn test_layout_variant_is_default() {
+        let layout = qwertz_tkl();
+        assert_eq!(layout.variant, XkbVariant::Default);
+    }
+
+    #[test]
+    fn test_row_0_contains_esc_and_f12() {
+        let layout = qwertz_tkl();
+        let row0 = &layout.rows[0];
+        let labels: Vec<&str> = row0.iter().map(|k| k.label.as_str()).collect();
+        assert!(labels.contains(&"Esc"));
+        assert!(labels.contains(&"F12"));
+    }
+
+    #[test]
+    fn test_row_1_contains_number_keys() {
+        let layout = qwertz_tkl();
+        let row1 = &layout.rows[1];
+        let labels: Vec<&str> = row1.iter().map(|k| k.label.as_str()).collect();
+        assert!(labels.contains(&"1"));
+        assert!(labels.contains(&"0"));
+        assert!(labels.contains(&"⌫"));
+    }
+
+    #[test]
+    fn test_row_2_has_qwertz_ordering() {
+        let layout = qwertz_tkl();
+        let row2 = &layout.rows[2];
+        let char_labels: Vec<&str> = row2.iter().filter(|k| !k.label.is_empty()).map(|k| k.label.as_str()).collect();
+        assert!(char_labels.contains(&"Q"));
+        assert!(char_labels.contains(&"W"));
+        assert!(char_labels.contains(&"E"));
+        assert!(char_labels.contains(&"R"));
+        assert!(char_labels.contains(&"T"));
+        assert!(char_labels.contains(&"Z"));
+        assert!(char_labels.contains(&"U"));
+    }
+
+    #[test]
+    fn test_row_3_contains_capslock() {
+        let layout = qwertz_tkl();
+        let row3 = &layout.rows[3];
+        assert!(row3.iter().any(|k| k.keycode == keycode::KEY_CAPSLOCK));
+    }
+
+    #[test]
+    fn test_row_4_contains_left_and_right_shift() {
+        let layout = qwertz_tkl();
+        let row4 = &layout.rows[4];
+        assert!(row4.iter().any(|k| k.keycode == keycode::KEY_LEFTSHIFT));
+        assert!(row4.iter().any(|k| k.keycode == keycode::KEY_RIGHTSHIFT));
+    }
+
+    #[test]
+    fn test_row_5_contains_space() {
+        let layout = qwertz_tkl();
+        let row5 = &layout.rows[5];
+        assert!(row5.iter().any(|k| k.keycode == keycode::KEY_SPACE));
+    }
+
+    #[test]
+    fn test_all_keys_have_valid_keycodes() {
+        let layout = qwertz_tkl();
+        for (row_idx, row) in layout.rows.iter().enumerate() {
+            for (col_idx, key) in row.iter().enumerate() {
+                assert!(
+                    key.keycode.raw() > 0 || key.label.is_empty(),
+                    "Invalid keycode at row {row_idx} col {col_idx}: {:?}",
+                    key.label
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_layout_contains_arrow_keys() {
+        let layout = qwertz_tkl();
+        let all_keycodes: Vec<_> = layout.rows.iter().flat_map(|row| row.iter().map(|k| k.keycode)).collect();
+        assert!(all_keycodes.contains(&keycode::KEY_UP));
+        assert!(all_keycodes.contains(&keycode::KEY_DOWN));
+        assert!(all_keycodes.contains(&keycode::KEY_LEFT));
+        assert!(all_keycodes.contains(&keycode::KEY_RIGHT));
+    }
+}

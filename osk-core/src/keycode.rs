@@ -239,3 +239,86 @@ pub const KEY_PRINT: KeyCode = KeyCode::new(99);
 pub const KEY_SCROLLLOCK: KeyCode = KeyCode::new(70);
 /// Pause / Break
 pub const KEY_PAUSE: KeyCode = KeyCode::new(119);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_keycode_new_and_raw() {
+        let kc = KeyCode::new(42);
+        assert_eq!(kc.raw(), 42);
+    }
+
+    #[test]
+    fn test_keycode_from_u32() {
+        let kc: KeyCode = 30u32.into();
+        assert_eq!(kc.raw(), 30);
+    }
+
+    #[test]
+    fn test_keycode_into_u32() {
+        let kc = KeyCode::new(16);
+        let value: u32 = kc.into();
+        assert_eq!(value, 16);
+    }
+
+    #[test]
+    fn test_modifier_detection_left_shift() {
+        assert_eq!(KEY_LEFTSHIFT.modifier(), Some(Modifier::Shift));
+    }
+
+    #[test]
+    fn test_modifier_detection_right_shift() {
+        assert_eq!(KEY_RIGHTSHIFT.modifier(), Some(Modifier::Shift));
+    }
+
+    #[test]
+    fn test_modifier_detection_capslock() {
+        assert_eq!(KEY_CAPSLOCK.modifier(), Some(Modifier::CapsLock));
+    }
+
+    #[test]
+    fn test_modifier_detection_left_ctrl() {
+        assert_eq!(KEY_LEFTCTRL.modifier(), Some(Modifier::Ctrl));
+    }
+
+    #[test]
+    fn test_modifier_detection_right_ctrl() {
+        assert_eq!(KEY_RIGHTCTRL.modifier(), Some(Modifier::Ctrl));
+    }
+
+    #[test]
+    fn test_modifier_detection_left_alt() {
+        assert_eq!(KEY_LEFTALT.modifier(), Some(Modifier::Alt));
+    }
+
+    #[test]
+    fn test_modifier_detection_right_alt() {
+        assert_eq!(KEY_RIGHTALT.modifier(), Some(Modifier::Alt));
+    }
+
+    #[test]
+    fn test_modifier_detection_left_meta() {
+        assert_eq!(KEY_LEFTMETA.modifier(), Some(Modifier::Super));
+    }
+
+    #[test]
+    fn test_modifier_detection_right_meta() {
+        assert_eq!(KEY_RIGHTMETA.modifier(), Some(Modifier::Super));
+    }
+
+    #[test]
+    fn test_non_modifier_key_returns_none() {
+        assert_eq!(KEY_A.modifier(), None);
+        assert_eq!(KEY_SPACE.modifier(), None);
+        assert_eq!(KEY_ENTER.modifier(), None);
+        assert_eq!(KEY_ESC.modifier(), None);
+    }
+
+    #[test]
+    fn test_keycode_equality() {
+        assert_eq!(KEY_A, KeyCode::new(30));
+        assert_ne!(KEY_A, KEY_S);
+    }
+}
