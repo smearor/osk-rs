@@ -123,5 +123,8 @@ pub fn run() {
         info!("osk-rs keyboard visible (layout={layout_for_log}, size={size_variant})");
     });
 
-    let _ = app.run_with_args(&["osk-app"]);
+    // Strip our custom CLI args so GTK's Application::run() doesn't choke on them.
+    // clap already parsed what we need; pass only the program name to GTK.
+    let gtk_args = std::env::args().take(1).collect::<Vec<_>>();
+    let _ = app.run_with_args(&gtk_args);
 }
