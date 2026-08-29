@@ -1,5 +1,6 @@
 //! OSK window that renders the keyboard as a GTK 4 layer-shell surface.
 
+use crate::KeyVisualState;
 use crate::UiError;
 use gtk4::Application;
 use gtk4::ApplicationWindow;
@@ -19,11 +20,13 @@ use gtk4_layer_shell::Layer;
 use gtk4_layer_shell::LayerShell;
 use osk_config::DisplayConfig;
 use osk_config::KeyboardHeight;
+use osk_core::Key;
 use osk_core::KeyShape;
 use osk_core::KeyState;
 use osk_core::KeyType;
 use osk_core::LayoutDef;
 use osk_core::Modifier;
+use osk_core::KeyCode;
 use osk_input::ModifierState;
 use osk_input::VirtualKeyboard;
 use std::cell::RefCell;
@@ -128,7 +131,6 @@ impl OskWindow {
     /// Touch events send key events immediately via the virtual keyboard,
     /// with visual feedback deferred to the next idle cycle.
     pub fn render_keys<V: VirtualKeyboard + 'static>(&self, keyboard: Rc<RefCell<V>>, modifier_state: Rc<RefCell<ModifierState>>) {
-        // Clear existing children
         while let Some(child) = self.grid.first_child() {
             self.grid.remove(&child);
         }
@@ -136,160 +138,188 @@ impl OskWindow {
         for (row_idx, row) in self.layout.rows.iter().enumerate() {
             let mut col_idx: i32 = 0;
             for key in row.iter() {
-                let button = Button::builder().label(&key.label).css_classes(["key"]).build();
+                let (button, popover, width) = self.create_key_button(key);
+                self.attach_touch_handlers(&button, &popover, key, keyboard.clone(), modifier_state.clone());
+                self.attach_long_press(&button, key.keycode);
 
-                // Add custom CSS class if present
-                if let Some(ref css_class) = key.css_class {
-                    button.add_css_class(css_class.as_str());
-                }
-
-                // Set width based on key shape
-                let width = match &key.shape {
-                    KeyShape::Rect { width_u } => *width_u,
-                    KeyShape::LShape { top_width_u, .. } => *top_width_u,
-                };
-
-                // For spacers, make them invisible
-                if key.label.is_empty() {
-                    button.set_visible(false);
-                }
-
-                // Create key preview popover (enlarged label shown on touch)
-                let preview_label = Label::builder().label(&key.label).css_classes(["key-preview-label"]).build();
-                let preview_popover = Popover::builder().child(&preview_label).autohide(false).build();
-                preview_popover.set_parent(&button);
-
-                // Attach touch gesture for low-latency key events
-                let gesture = GestureClick::builder().touch_only(true).build();
-
-                // Shared repeat timer ID — allows release to cancel the repeat
-                let repeat_source: Rc<RefCell<Option<SourceId>>> = Rc::new(RefCell::new(None));
-
-                let keyboard_clone = keyboard.clone();
-                let modifier_state_clone = modifier_state.clone();
-                let button_clone = button.clone();
-                let keycode = key.keycode;
-                let key_type = key.key_type.clone();
-                let repeat_source_clone = repeat_source.clone();
-                let preview_popover_pressed = preview_popover.clone();
-
-                gesture.connect_pressed(move |_, _n, _x, _y| {
-                    // 1. Send key event IMMEDIATELY — before any UI work
-                    if key_type == KeyType::Modifier
-                        && let Some(modifier) = keycode.modifier()
-                    {
-                        modifier_state_clone.borrow_mut().press(modifier);
-                        if let Err(e) = keyboard_clone.borrow_mut().send_modifiers(&modifier_state_clone.borrow()) {
-                            error!("Failed to send modifier state: {e}");
-                        }
-                    }
-
-                    if let Err(e) = keyboard_clone.borrow_mut().send_key(keycode, KeyState::Pressed) {
-                        error!("Failed to send key event: {e}");
-                    }
-
-                    // 2. Defer visual feedback to the next idle cycle
-                    let button_widget = button_clone.clone();
-                    let key_type_idle = key_type.clone();
-                    let popover_idle = preview_popover_pressed.clone();
-                    glib::idle_add_local_once(move || {
-                        button_widget.add_css_class("key-pressed");
-                        if key_type_idle == KeyType::Modifier {
-                            button_widget.add_css_class("key-active");
-                        }
-                        popover_idle.popup();
-                    });
-
-                    // 3. Start key repeat timer (non-modifier keys only)
-                    if key_type != KeyType::Modifier {
-                        let keyboard_repeat = keyboard_clone.clone();
-                        let repeat_source_repeat = repeat_source_clone.clone();
-                        let repeat_keycode = keycode;
-                        // Delay before repeat begins
-                        let source_id = glib::timeout_add_local_once(std::time::Duration::from_millis(KEY_REPEAT_DELAY_MS as u64), move || {
-                            // Send first repeat immediately
-                            if let Err(e) = keyboard_repeat.borrow_mut().send_key(repeat_keycode, KeyState::Pressed) {
-                                error!("Failed to send key repeat: {e}");
-                            }
-                            if let Err(e) = keyboard_repeat.borrow_mut().send_key(repeat_keycode, KeyState::Released) {
-                                error!("Failed to send key repeat release: {e}");
-                            }
-                            // Then set up recurring interval
-                            let keyboard_interval = keyboard_repeat.clone();
-                            let source_id = glib::timeout_add_local(std::time::Duration::from_millis(KEY_REPEAT_INTERVAL_MS as u64), move || {
-                                if let Err(e) = keyboard_interval.borrow_mut().send_key(repeat_keycode, KeyState::Pressed) {
-                                    error!("Failed to send key repeat: {e}");
-                                }
-                                if let Err(e) = keyboard_interval.borrow_mut().send_key(repeat_keycode, KeyState::Released) {
-                                    error!("Failed to send key repeat release: {e}");
-                                }
-                                glib::ControlFlow::Continue
-                            });
-                            *repeat_source_repeat.borrow_mut() = Some(source_id);
-                        });
-                        *repeat_source_clone.borrow_mut() = Some(source_id);
-                    }
-                });
-
-                let keyboard_clone = keyboard.clone();
-                let modifier_state_clone = modifier_state.clone();
-                let button_clone = button.clone();
-                let keycode = key.keycode;
-                let key_type_release = key.key_type.clone();
-                let repeat_source_release = repeat_source.clone();
-                let preview_popover_released = preview_popover.clone();
-
-                gesture.connect_released(move |_, _n, _x, _y| {
-                    // Cancel key repeat timer
-                    if let Some(source_id) = repeat_source_release.borrow_mut().take() {
-                        source_id.remove();
-                    }
-
-                    if key_type_release == KeyType::Modifier
-                        && let Some(modifier) = keycode.modifier()
-                    {
-                        modifier_state_clone.borrow_mut().release(modifier);
-                        if let Err(e) = keyboard_clone.borrow_mut().send_modifiers(&modifier_state_clone.borrow()) {
-                            error!("Failed to send modifier state: {e}");
-                        }
-                    }
-
-                    if let Err(e) = keyboard_clone.borrow_mut().send_key(keycode, KeyState::Released) {
-                        error!("Failed to send key release: {e}");
-                    }
-
-                    let button_widget = button_clone.clone();
-                    let key_type_idle = key_type_release.clone();
-                    let popover_idle = preview_popover_released.clone();
-                    glib::idle_add_local_once(move || {
-                        button_widget.remove_css_class("key-pressed");
-                        // Keep key-active for CapsLock while locked
-                        if key_type_idle == KeyType::Modifier
-                            && let Some(modifier) = keycode.modifier()
-                            && modifier != Modifier::CapsLock
-                        {
-                            button_widget.remove_css_class("key-active");
-                        }
-                        popover_idle.popdown();
-                    });
-                });
-
-                button.add_controller(gesture);
-
-                // Long-press gesture stub for future features (dead keys, accent variants)
-                let long_press = GestureLongPress::builder().touch_only(true).build();
-                let long_press_keycode = key.keycode;
-                long_press.connect_pressed(move |_, _x, _y| {
-                    debug!("Long press detected on keycode {:?}", long_press_keycode);
-                });
-                button.add_controller(long_press);
-
-                // Place in grid with appropriate column span
                 let col_span = width.ceil() as i32;
                 self.grid.attach(&button, col_idx, row_idx as i32, col_span.max(1), 1);
                 col_idx += col_span.max(1);
             }
         }
+    }
+
+    /// Create a GTK button for a key with CSS classes, visibility, and preview popover.
+    ///
+    /// Returns the button, its preview popover, and the key width in grid units.
+    fn create_key_button(&self, key: &Key) -> (Button, Popover, f32) {
+        let button = Button::builder().label(&key.label).css_classes(["key"]).build();
+
+        if let Some(ref css_class) = key.css_class {
+            button.add_css_class(css_class.as_str());
+        }
+
+        let width = match &key.shape {
+            KeyShape::Rect { width_u } => *width_u,
+            KeyShape::LShape { top_width_u, .. } => *top_width_u,
+        };
+
+        if key.label.is_empty() {
+            button.set_visible(false);
+        }
+
+        let preview_label = Label::builder().label(&key.label).css_classes(["key-preview-label"]).build();
+        let preview_popover = Popover::builder().child(&preview_label).autohide(false).build();
+        preview_popover.set_parent(&button);
+
+        (button, preview_popover, width)
+    }
+
+    /// Attach touch press/release handlers to a key button.
+    ///
+    /// On press: sends key event immediately, defers visual feedback, starts key repeat.
+    /// On release: cancels repeat, sends key release, removes visual feedback.
+    fn attach_touch_handlers<V: VirtualKeyboard + 'static>(
+        &self,
+        button: &Button,
+        popover: &Popover,
+        key: &Key,
+        keyboard: Rc<RefCell<V>>,
+        modifier_state: Rc<RefCell<ModifierState>>,
+    ) {
+        let gesture = GestureClick::builder().touch_only(true).build();
+        let repeat_source: Rc<RefCell<Option<SourceId>>> = Rc::new(RefCell::new(None));
+        let keycode = key.keycode;
+        let key_type = key.key_type.clone();
+
+        // --- Pressed handler ---
+        let keyboard_pressed = keyboard.clone();
+        let modifier_state_pressed = modifier_state.clone();
+        let button_pressed = button.clone();
+        let key_type_pressed = key_type.clone();
+        let repeat_source_pressed = repeat_source.clone();
+        let popover_pressed = popover.clone();
+
+        gesture.connect_pressed(move |_, _n, _x, _y| {
+            // 1. Send key event IMMEDIATELY — before any UI work
+            if key_type_pressed == KeyType::Modifier
+                && let Some(modifier) = keycode.modifier()
+            {
+                modifier_state_pressed.borrow_mut().press(modifier);
+                if let Err(e) = keyboard_pressed.borrow_mut().send_modifiers(&modifier_state_pressed.borrow()) {
+                    error!("Failed to send modifier state: {e}");
+                }
+            }
+
+            if let Err(e) = keyboard_pressed.borrow_mut().send_key(keycode, KeyState::Pressed) {
+                error!("Failed to send key event: {e}");
+            }
+
+            // 2. Defer visual feedback to the next idle cycle
+            let button_widget = button_pressed.clone();
+            let key_type_idle = key_type_pressed.clone();
+            let popover_idle = popover_pressed.clone();
+            glib::idle_add_local_once(move || {
+                button_widget.add_css_class(KeyVisualState::Pressed.css_class());
+                if key_type_idle == KeyType::Modifier {
+                    button_widget.add_css_class(KeyVisualState::Active.css_class());
+                }
+                popover_idle.popup();
+            });
+
+            // 3. Start key repeat timer (non-modifier keys only)
+            if key_type_pressed != KeyType::Modifier {
+                Self::start_key_repeat(keyboard_pressed.clone(), keycode, repeat_source_pressed.clone());
+            }
+        });
+
+        // --- Released handler ---
+        let keyboard_released = keyboard.clone();
+        let modifier_state_released = modifier_state.clone();
+        let button_released = button.clone();
+        let key_type_released = key_type.clone();
+        let repeat_source_released = repeat_source.clone();
+        let popover_released = popover.clone();
+
+        gesture.connect_released(move |_, _n, _x, _y| {
+            // Cancel key repeat timer
+            if let Some(source_id) = repeat_source_released.borrow_mut().take() {
+                source_id.remove();
+            }
+
+            if key_type_released == KeyType::Modifier
+                && let Some(modifier) = keycode.modifier()
+            {
+                modifier_state_released.borrow_mut().release(modifier);
+                if let Err(e) = keyboard_released.borrow_mut().send_modifiers(&modifier_state_released.borrow()) {
+                    error!("Failed to send modifier state: {e}");
+                }
+            }
+
+            if let Err(e) = keyboard_released.borrow_mut().send_key(keycode, KeyState::Released) {
+                error!("Failed to send key release: {e}");
+            }
+
+            let button_widget = button_released.clone();
+            let key_type_idle = key_type_released.clone();
+            let popover_idle = popover_released.clone();
+            glib::idle_add_local_once(move || {
+                button_widget.remove_css_class(KeyVisualState::Pressed.css_class());
+                // Keep key-active for CapsLock while locked
+                if key_type_idle == KeyType::Modifier
+                    && let Some(modifier) = keycode.modifier()
+                    && modifier != Modifier::CapsLock
+                {
+                    button_widget.remove_css_class(KeyVisualState::Active.css_class());
+                }
+                popover_idle.popdown();
+            });
+        });
+
+        button.add_controller(gesture);
+    }
+
+    /// Start a key repeat timer for a non-modifier key.
+    ///
+    /// After `KEY_REPEAT_DELAY_MS`, sends repeated press/release cycles
+    /// at `KEY_REPEAT_INTERVAL_MS` intervals until cancelled on release.
+    fn start_key_repeat<V: VirtualKeyboard + 'static>(
+        keyboard: Rc<RefCell<V>>,
+        keycode: KeyCode,
+        repeat_source: Rc<RefCell<Option<SourceId>>>,
+    ) {
+        let repeat_source_inner = repeat_source.clone();
+        let source_id = glib::timeout_add_local_once(std::time::Duration::from_millis(KEY_REPEAT_DELAY_MS as u64), move || {
+            // Send first repeat immediately
+            if let Err(e) = keyboard.borrow_mut().send_key(keycode, KeyState::Pressed) {
+                error!("Failed to send key repeat: {e}");
+            }
+            if let Err(e) = keyboard.borrow_mut().send_key(keycode, KeyState::Released) {
+                error!("Failed to send key repeat release: {e}");
+            }
+            // Then set up recurring interval
+            let keyboard_interval = keyboard.clone();
+            let source_id = glib::timeout_add_local(std::time::Duration::from_millis(KEY_REPEAT_INTERVAL_MS as u64), move || {
+                if let Err(e) = keyboard_interval.borrow_mut().send_key(keycode, KeyState::Pressed) {
+                    error!("Failed to send key repeat: {e}");
+                }
+                if let Err(e) = keyboard_interval.borrow_mut().send_key(keycode, KeyState::Released) {
+                    error!("Failed to send key repeat release: {e}");
+                }
+                glib::ControlFlow::Continue
+            });
+            *repeat_source_inner.borrow_mut() = Some(source_id);
+        });
+        *repeat_source.borrow_mut() = Some(source_id);
+    }
+
+    /// Attach a long-press gesture stub for future features (dead keys, accent variants).
+    fn attach_long_press(&self, button: &Button, keycode: KeyCode) {
+        let long_press = GestureLongPress::builder().touch_only(true).build();
+        long_press.connect_pressed(move |_, _x, _y| {
+            debug!("Long press detected on keycode {:?}", keycode);
+        });
+        button.add_controller(long_press);
     }
 
     /// Show the window.

@@ -5,8 +5,10 @@
 //! (e.g. ISO L-shaped Enter key).
 
 mod error;
+mod key_visual_state;
 mod window;
 
 pub use error::UiError;
+pub use key_visual_state::KeyVisualState;
 pub use window::DEFAULT_CSS;
 pub use window::OskWindow;
