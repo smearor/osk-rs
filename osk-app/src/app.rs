@@ -87,6 +87,14 @@ pub fn run() {
         let mut virtual_keyboard = WaylandVirtualKeyboard::from_proxy(vkbd_proxy);
         info!("Virtual keyboard proxy created");
 
+        // Roundtrip to ensure the virtual keyboard proxy is fully initialized
+        info!("Syncing Wayland queue...");
+        if let Err(e) = wayland.connection.roundtrip() {
+            error!("Wayland roundtrip failed: {e}");
+            return;
+        }
+        info!("Wayland queue synced");
+
         // Generate XKB keymap from the selected layout and variant
         info!("Generating XKB keymap...");
         let keymap_string = match XkbLayoutParser::new() {
