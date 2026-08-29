@@ -71,6 +71,7 @@ pub fn run() {
     let variant_for_keymap = variant.clone();
     app.connect_activate(move |app| {
         // Connect to Wayland and bind required globals
+        info!("Connecting to Wayland...");
         let wayland = match WaylandContext::connect() {
             Ok(ctx) => ctx,
             Err(e) => {
@@ -78,12 +79,16 @@ pub fn run() {
                 return;
             }
         };
+        info!("Wayland connected");
 
         // Create virtual keyboard proxy from the Wayland context
+        info!("Creating virtual keyboard proxy...");
         let vkbd_proxy = wayland.vkbd_manager.create_virtual_keyboard(&wayland.seat, &wayland.queue_handle, ());
         let mut virtual_keyboard = WaylandVirtualKeyboard::from_proxy(vkbd_proxy);
+        info!("Virtual keyboard proxy created");
 
         // Generate XKB keymap from the selected layout and variant
+        info!("Generating XKB keymap...");
         let keymap_string = match XkbLayoutParser::new() {
             Ok(parser) => match parser.parse(&layout_for_log, &variant_for_keymap) {
                 Ok(keymap) => keymap.keymap_string,
@@ -97,13 +102,16 @@ pub fn run() {
                 return;
             }
         };
+        info!("XKB keymap generated");
 
         if let Err(e) = virtual_keyboard.publish_keymap(&keymap_string) {
             error!("Keymap setup failed: {e}");
             return;
         }
+        info!("Keymap published");
 
         // Create the OSK window
+        info!("Creating OSK window...");
         let window = match OskWindow::new(app, layout_def.clone(), &config.display) {
             Ok(w) => w,
             Err(e) => {
@@ -111,13 +119,17 @@ pub fn run() {
                 return;
             }
         };
+        info!("OSK window created");
 
         // Wrap virtual keyboard and modifier state in Rc<RefCell>
         let keyboard = Rc::new(RefCell::new(virtual_keyboard));
         let modifier_state = Rc::new(RefCell::new(ModifierState::new()));
 
         // Render keys with touch handlers
+        info!("Rendering keys...");
         window.render_keys(keyboard, modifier_state);
+        info!("Keys rendered");
+
         window.show();
 
         info!("osk-rs keyboard visible (layout={layout_for_log}, size={size_variant})");
