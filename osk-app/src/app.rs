@@ -123,5 +123,5 @@ pub fn run() {
         info!("osk-rs keyboard visible (layout={layout_for_log}, size={size_variant})");
     });
 
-    let _ = app.run();
+    let _ = app.run_with_args(&["osk-app"]);
 }
