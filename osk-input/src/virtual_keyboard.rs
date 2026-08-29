@@ -4,6 +4,7 @@ use crate::InputError;
 use crate::ModifierState;
 use libc::MAP_SHARED;
 use libc::PROT_READ;
+use libc::PROT_WRITE;
 use libc::close;
 use libc::ftruncate;
 use libc::mmap;
@@ -92,7 +93,7 @@ impl WaylandVirtualKeyboard {
                 return Err(InputError::KeymapFailed("ftruncate failed".to_string()));
             }
 
-            let ptr = mmap(ptr::null_mut(), len, PROT_READ, MAP_SHARED, fd, 0);
+            let ptr = mmap(ptr::null_mut(), len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
             if ptr == libc::MAP_FAILED {
                 close(fd);
                 return Err(InputError::KeymapFailed("mmap failed".to_string()));
