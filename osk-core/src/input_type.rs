@@ -26,3 +26,13 @@ pub enum InputType {
     /// Emoji input — emoji selector grid
     Emoji,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn input_type_default_is_text() {
+        assert_eq!(InputType::default(), InputType::Text);
+    }
+}

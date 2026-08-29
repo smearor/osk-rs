@@ -10,3 +10,7 @@ description = "Virtual keyboard protocol client and modifier state machine for o
 [dependencies]
 osk-core = { path = "../osk-core" }
 thiserror = { workspace = true }
+wayland-client = { workspace = true }
+wayland-protocols = { workspace = true }
+wayland-protocols-misc = { workspace = true }
+libc = { workspace = true }

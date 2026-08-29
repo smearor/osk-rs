@@ -11,6 +11,9 @@ pub enum InputError {
     /// The keymap could not be published to the compositor
     #[error("keymap publication failed: {0}")]
     KeymapPublicationFailed(String),
+    /// The keymap string could not be processed
+    #[error("keymap creation failed: {0}")]
+    KeymapFailed(String),
     /// A key event was sent with an invalid keycode
     #[error("invalid keycode: {0}")]
     InvalidKeycode(u32),

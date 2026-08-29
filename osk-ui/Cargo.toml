@@ -9,4 +9,10 @@ description = "GTK 4 rendering and touch hit-testing for osk-rs"
 
 [dependencies]
 osk-core = { path = "../osk-core" }
+osk-input = { path = "../osk-input" }
 thiserror = { workspace = true }
+gdk4 = { workspace = true }
+glib = { workspace = true }
+gtk4 = { workspace = true }
+gtk4-layer-shell = { workspace = true }
+tracing = { workspace = true }

@@ -1,6 +1,6 @@
 //! Builder for size variants — selects which key blocks to include.
 
-use osk_core::{Key, KeyShape, KeyType, LayoutDef, SizeVariant};
+use osk_core::{Key, LayoutDef, SizeVariant};
 
 /// Builder for size variants — selects which key blocks to include.
 ///
@@ -21,11 +21,6 @@ impl SizeVariantBuilder {
 
     /// Get the default key for a spacer between key blocks.
     pub fn spacer() -> Key {
-        Key {
-            keycode: 0,
-            label: String::new(),
-            shape: KeyShape::Rect { width_u: 0.5 },
-            key_type: KeyType::Special,
-        }
+        Key::spacer(0.5)
     }
 }

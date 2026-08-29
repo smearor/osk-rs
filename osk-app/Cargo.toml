@@ -18,6 +18,8 @@ osk-layout = { path = "../osk-layout" }
 osk-ui = { path = "../osk-ui" }
 osk-wayland = { path = "../osk-wayland" }
 clap = { workspace = true }
+glib = { workspace = true }
+gtk4 = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

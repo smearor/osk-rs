@@ -1,0 +1,36 @@
+.key {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    border-radius: 6px;
+    border: 1px solid #3d3d3d;
+    font-size: 16px;
+}
+.key-pressed {
+    background: #4a9eff;
+    color: #ffffff;
+    border-color: #6ab0ff;
+}
+.key-modifier {
+    background: #3a3a3a;
+}
+.key-modifier.key-pressed {
+    background: #4a9eff;
+}
+.key-special {
+    background: #333333;
+}
+.key-fn {
+    background: #2a2a2a;
+    font-size: 12px;
+}
+.key-spacer {
+    background: transparent;
+    border: none;
+}
+.key-enter {
+    background: #3a3a3a;
+}
+.key-active {
+    background: #4a9eff;
+    color: #ffffff;
+}

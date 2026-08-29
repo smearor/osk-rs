@@ -10,8 +10,11 @@ mod key;
 mod key_shape;
 mod key_state;
 mod key_type;
+pub mod keycode;
 mod layout_def;
+mod modifier;
 mod size_variant;
+mod xkb_variant;
 
 pub use display_mode::DisplayMode;
 pub use input_type::InputType;
@@ -19,32 +22,14 @@ pub use key::Key;
 pub use key_shape::KeyShape;
 pub use key_state::KeyState;
 pub use key_type::KeyType;
+pub use keycode::KeyCode;
 pub use layout_def::LayoutDef;
+pub use modifier::Modifier;
 pub use size_variant::SizeVariant;
+pub use xkb_variant::XkbVariant;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn input_type_default_is_text() {
-        assert_eq!(InputType::default(), InputType::Text);
-    }
-
-    #[test]
-    fn key_shape_rect_serialization() {
-        let shape = KeyShape::Rect { width_u: 1.5 };
-        let json = serde_json::to_string(&shape).unwrap();
-        let deserialized: KeyShape = serde_json::from_str(&json).unwrap();
-        assert_eq!(shape, deserialized);
-    }
-
-    #[test]
-    fn size_variant_equality() {
-        assert_eq!(SizeVariant::Compact60, SizeVariant::Compact60);
-        assert_ne!(SizeVariant::Compact60, SizeVariant::Tenkeyless80);
-    }
-
     #[test]
     fn book_summary_has_all_chapters() {
         let summary = include_str!("../../book/src/SUMMARY.md");

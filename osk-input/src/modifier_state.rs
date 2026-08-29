@@ -1,5 +1,7 @@
 //! Modifier state tracking for the virtual keyboard.
 
+use osk_core::Modifier;
+
 /// Modifier state tracking for the virtual keyboard.
 ///
 /// Tracks which modifiers are currently depressed, latched, or locked.
@@ -24,26 +26,47 @@ impl ModifierState {
 
     /// Check if Shift is currently active (depressed or latched).
     pub fn is_shift_active(&self) -> bool {
-        (self.depressed | self.latched) & 0x01 != 0
+        (self.depressed | self.latched) & Modifier::Shift.bitmask() != 0
     }
 
     /// Check if CapsLock is locked on.
     pub fn is_caps_lock_on(&self) -> bool {
-        self.locked & 0x02 != 0
+        self.locked & Modifier::CapsLock.bitmask() != 0
     }
 
     /// Check if Ctrl is currently active.
     pub fn is_ctrl_active(&self) -> bool {
-        (self.depressed | self.latched) & 0x04 != 0
+        (self.depressed | self.latched) & Modifier::Ctrl.bitmask() != 0
     }
 
     /// Check if Alt is currently active.
     pub fn is_alt_active(&self) -> bool {
-        (self.depressed | self.latched) & 0x08 != 0
+        (self.depressed | self.latched) & Modifier::Alt.bitmask() != 0
     }
 
     /// Check if Super (Meta) is currently active.
     pub fn is_super_active(&self) -> bool {
-        (self.depressed | self.latched) & 0x40 != 0
+        (self.depressed | self.latched) & Modifier::Super.bitmask() != 0
+    }
+
+    /// Press a modifier key, updating the state accordingly.
+    ///
+    /// - Shift, Ctrl, Alt, Super: set the depressed bit.
+    /// - CapsLock: toggle the locked bit.
+    pub fn press(&mut self, modifier: Modifier) {
+        if modifier == Modifier::CapsLock {
+            self.locked ^= modifier.bitmask();
+        } else {
+            self.depressed |= modifier.bitmask();
+        }
+    }
+
+    /// Release a modifier key, clearing the depressed bit.
+    ///
+    /// CapsLock is not affected by release — it stays locked until toggled.
+    pub fn release(&mut self, modifier: Modifier) {
+        if modifier != Modifier::CapsLock {
+            self.depressed &= !modifier.bitmask();
+        }
     }
 }

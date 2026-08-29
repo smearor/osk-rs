@@ -21,3 +21,16 @@ pub enum KeyShape {
         bottom_width_u: f32,
     },
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn key_shape_rect_serialization() {
+        let shape = KeyShape::Rect { width_u: 1.5 };
+        let json = serde_json::to_string(&shape).unwrap();
+        let deserialized: KeyShape = serde_json::from_str(&json).unwrap();
+        assert_eq!(shape, deserialized);
+    }
+}

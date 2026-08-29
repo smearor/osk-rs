@@ -10,3 +10,7 @@ description = "Wayland client for osk-rs — layer-shell surface, registry bind,
 [dependencies]
 osk-core = { path = "../osk-core" }
 thiserror = { workspace = true }
+wayland-client = { workspace = true }
+wayland-protocols = { workspace = true }
+wayland-protocols-misc = { workspace = true }
+wayland-protocols-wlr = { workspace = true }

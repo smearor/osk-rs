@@ -8,4 +8,4 @@ mod error;
 mod window;
 
 pub use error::UiError;
-pub use window::OskWindow;
+pub use window::{DEFAULT_CSS, OskWindow};
