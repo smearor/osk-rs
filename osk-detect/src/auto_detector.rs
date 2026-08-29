@@ -1,6 +1,7 @@
 //! Auto-detector that selects the best available backend at runtime.
 
-use crate::{DetectError, LayoutDetector};
+use crate::DetectError;
+use crate::LayoutDetector;
 
 /// Auto-detector that selects the best available backend at runtime.
 ///

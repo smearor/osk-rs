@@ -1,6 +1,7 @@
 //! Display configuration section.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Display configuration section.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

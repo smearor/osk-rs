@@ -4,9 +4,9 @@
 //! `<linux/input-event-codes.h>` and are used by the
 //! `zwp_virtual_keyboard_v1` protocol.
 
-use serde::{Deserialize, Serialize};
-
 use crate::modifier::Modifier;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A Linux evdev keycode.
 ///

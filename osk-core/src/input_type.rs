@@ -1,6 +1,7 @@
 //! Input type hint from `zwp_input_method_v2` content_type.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Input type hint from `zwp_input_method_v2` content_type.
 ///

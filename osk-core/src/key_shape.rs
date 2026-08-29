@@ -1,6 +1,7 @@
 //! Geometric shape of a key on the keyboard grid.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Geometric shape of a key on the keyboard grid.
 ///

@@ -1,17 +1,27 @@
 //! OSK window that renders the keyboard as a GTK 4 layer-shell surface.
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
+use crate::UiError;
+use gtk4::Application;
+use gtk4::ApplicationWindow;
+use gtk4::Button;
+use gtk4::GestureClick;
+use gtk4::Grid;
 use gtk4::gdk;
 use gtk4::glib;
 use gtk4::prelude::*;
-use gtk4::{Application, ApplicationWindow, Button, GestureClick, Grid};
-use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
-use osk_core::{KeyShape, KeyState, KeyType, LayoutDef};
-use osk_input::{ModifierState, VirtualKeyboard};
-
-use crate::UiError;
+use gtk4_layer_shell::Edge;
+use gtk4_layer_shell::KeyboardMode;
+use gtk4_layer_shell::Layer;
+use gtk4_layer_shell::LayerShell;
+use osk_core::KeyShape;
+use osk_core::KeyState;
+use osk_core::KeyType;
+use osk_core::LayoutDef;
+use osk_input::ModifierState;
+use osk_input::VirtualKeyboard;
+use std::cell::RefCell;
+use std::rc::Rc;
+use tracing::error;
 
 /// Default CSS theme for the on-screen keyboard.
 pub const DEFAULT_CSS: &str = include_str!("../assets/default.css");
@@ -82,7 +92,7 @@ impl OskWindow {
     /// Each key becomes a `gtk4::Button` with a touch gesture attached.
     /// Touch events send key events immediately via the virtual keyboard,
     /// with visual feedback deferred to the next idle cycle.
-    pub fn render_keys<V: VirtualKeyboard + 'static>(&self, vkbd: Rc<RefCell<V>>, modifier_state: Rc<RefCell<ModifierState>>) {
+    pub fn render_keys<V: VirtualKeyboard + 'static>(&self, keyboard: Rc<RefCell<V>>, modifier_state: Rc<RefCell<ModifierState>>) {
         // Clear existing children
         while let Some(child) = self.grid.first_child() {
             self.grid.remove(&child);
@@ -112,53 +122,57 @@ impl OskWindow {
                 // Attach touch gesture for low-latency key events
                 let gesture = GestureClick::builder().touch_only(true).build();
 
-                let vkbd_clone = vkbd.clone();
-                let mod_clone = modifier_state.clone();
+                let keyboard_clone = keyboard.clone();
+                let modifier_state_clone = modifier_state.clone();
                 let button_clone = button.clone();
                 let keycode = key.keycode;
                 let key_type = key.key_type.clone();
 
                 gesture.connect_pressed(move |_, _n, _x, _y| {
                     // 1. Send key event IMMEDIATELY — before any UI work
-                    if key_type == KeyType::Modifier && let Some(modifier) = keycode.modifier() {
-                        mod_clone.borrow_mut().press(modifier);
-                        if let Err(e) = vkbd_clone.borrow_mut().send_modifiers(&mod_clone.borrow()) {
-                            tracing::error!("Failed to send modifier state: {e}");
+                    if key_type == KeyType::Modifier
+                        && let Some(modifier) = keycode.modifier()
+                    {
+                        modifier_state_clone.borrow_mut().press(modifier);
+                        if let Err(e) = keyboard_clone.borrow_mut().send_modifiers(&modifier_state_clone.borrow()) {
+                            error!("Failed to send modifier state: {e}");
                         }
                     }
 
-                    if let Err(e) = vkbd_clone.borrow_mut().send_key(keycode, KeyState::Pressed) {
-                        tracing::error!("Failed to send key event: {e}");
+                    if let Err(e) = keyboard_clone.borrow_mut().send_key(keycode, KeyState::Pressed) {
+                        error!("Failed to send key event: {e}");
                     }
 
                     // 2. Defer visual feedback to the next idle cycle
-                    let btn = button_clone.clone();
+                    let button_widget = button_clone.clone();
                     glib::idle_add_local_once(move || {
-                        btn.add_css_class("key-pressed");
+                        button_widget.add_css_class("key-pressed");
                     });
                 });
 
-                let vkbd_clone = vkbd.clone();
-                let mod_clone = modifier_state.clone();
+                let keyboard_clone = keyboard.clone();
+                let modifier_state_clone = modifier_state.clone();
                 let button_clone = button.clone();
                 let keycode = key.keycode;
                 let key_type_release = key.key_type.clone();
 
                 gesture.connect_released(move |_, _n, _x, _y| {
-                    if key_type_release == KeyType::Modifier && let Some(modifier) = keycode.modifier() {
-                        mod_clone.borrow_mut().release(modifier);
-                        if let Err(e) = vkbd_clone.borrow_mut().send_modifiers(&mod_clone.borrow()) {
-                            tracing::error!("Failed to send modifier state: {e}");
+                    if key_type_release == KeyType::Modifier
+                        && let Some(modifier) = keycode.modifier()
+                    {
+                        modifier_state_clone.borrow_mut().release(modifier);
+                        if let Err(e) = keyboard_clone.borrow_mut().send_modifiers(&modifier_state_clone.borrow()) {
+                            error!("Failed to send modifier state: {e}");
                         }
                     }
 
-                    if let Err(e) = vkbd_clone.borrow_mut().send_key(keycode, KeyState::Released) {
-                        tracing::error!("Failed to send key release: {e}");
+                    if let Err(e) = keyboard_clone.borrow_mut().send_key(keycode, KeyState::Released) {
+                        error!("Failed to send key release: {e}");
                     }
 
-                    let btn = button_clone.clone();
+                    let button_widget = button_clone.clone();
                     glib::idle_add_local_once(move || {
-                        btn.remove_css_class("key-pressed");
+                        button_widget.remove_css_class("key-pressed");
                     });
                 });
 

@@ -5,21 +5,19 @@
 //! `wl_seat`, `wl_shm`, `zwlr_layer_shell_v1`, and
 //! `zwp_virtual_keyboard_manager_v1`.
 
-use std::sync::Arc;
-
-use wayland_client::{
-    Connection, QueueHandle,
-    globals::{GlobalList, registry_queue_init},
-    protocol::wl_compositor::WlCompositor,
-    protocol::wl_seat::WlSeat,
-    protocol::wl_shm::WlShm,
-};
-use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1;
-use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_shell_v1::ZwlrLayerShellV1;
-
 use crate::error::WaylandError;
 use crate::protocol::WaylandProtocol;
 use crate::state::WaylandState;
+use std::sync::Arc;
+use wayland_client::Connection;
+use wayland_client::QueueHandle;
+use wayland_client::globals::GlobalList;
+use wayland_client::globals::registry_queue_init;
+use wayland_client::protocol::wl_compositor::WlCompositor;
+use wayland_client::protocol::wl_seat::WlSeat;
+use wayland_client::protocol::wl_shm::WlShm;
+use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1;
+use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_shell_v1::ZwlrLayerShellV1;
 
 /// Wayland context holding all bound globals required by the on-screen keyboard.
 ///
@@ -54,8 +52,7 @@ impl WaylandContext {
     pub fn connect() -> Result<Self, WaylandError> {
         let connection = Connection::connect_to_env().map_err(|e| WaylandError::ConnectionFailed(e.to_string()))?;
 
-        let (globals, queue) = registry_queue_init::<WaylandState>(&connection)
-            .map_err(|e| WaylandError::ConnectionFailed(e.to_string()))?;
+        let (globals, queue) = registry_queue_init::<WaylandState>(&connection).map_err(|e| WaylandError::ConnectionFailed(e.to_string()))?;
 
         let queue_handle = queue.handle();
 

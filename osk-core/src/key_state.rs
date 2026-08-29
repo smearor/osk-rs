@@ -1,6 +1,7 @@
 //! Pressed or released state of a key.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Pressed or released state of a key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,8 +1,8 @@
 //! Trait for building keyboard layouts from XKB definitions.
 
-use osk_core::{LayoutDef, SizeVariant};
-
 use crate::LayoutError;
+use osk_core::LayoutDef;
+use osk_core::SizeVariant;
 
 /// Trait for building keyboard layouts from XKB definitions.
 ///

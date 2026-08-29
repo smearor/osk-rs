@@ -1,6 +1,8 @@
 //! Builder for size variants — selects which key blocks to include.
 
-use osk_core::{Key, LayoutDef, SizeVariant};
+use osk_core::Key;
+use osk_core::LayoutDef;
+use osk_core::SizeVariant;
 
 /// Builder for size variants — selects which key blocks to include.
 ///

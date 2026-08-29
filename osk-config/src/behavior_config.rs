@@ -1,6 +1,7 @@
 //! Behavior configuration section.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Behavior configuration section.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

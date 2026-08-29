@@ -9,4 +9,5 @@ mod virtual_keyboard;
 
 pub use error::InputError;
 pub use modifier_state::ModifierState;
-pub use virtual_keyboard::{VirtualKeyboard, WaylandVirtualKeyboard};
+pub use virtual_keyboard::VirtualKeyboard;
+pub use virtual_keyboard::WaylandVirtualKeyboard;

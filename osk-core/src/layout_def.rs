@@ -1,8 +1,10 @@
 //! Layout definition for a complete keyboard.
 
-use serde::{Deserialize, Serialize};
-
-use crate::{Key, SizeVariant, XkbVariant};
+use crate::Key;
+use crate::SizeVariant;
+use crate::XkbVariant;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Layout definition for a complete keyboard.
 ///

@@ -1,8 +1,11 @@
 //! Root configuration structure for `osk-rs`.
 
-use serde::{Deserialize, Serialize};
-
-use crate::{BehaviorConfig, ConfigError, DisplayConfig, LayoutConfig};
+use crate::BehaviorConfig;
+use crate::ConfigError;
+use crate::DisplayConfig;
+use crate::LayoutConfig;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Root configuration structure for `osk-rs`.
 ///

@@ -5,18 +5,18 @@
 //! main loop, so this type exists only to satisfy `Dispatch` trait
 //! requirements.
 
-use wayland_client::{
-    Connection, Dispatch, QueueHandle, delegate_noop,
-    globals::GlobalListContents,
-    protocol::wl_compositor::WlCompositor,
-    protocol::wl_registry::{self, WlRegistry},
-    protocol::wl_seat::WlSeat,
-    protocol::wl_shm::WlShm,
-};
-use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::{
-    zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1,
-    zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1,
-};
+use wayland_client::Connection;
+use wayland_client::Dispatch;
+use wayland_client::QueueHandle;
+use wayland_client::delegate_noop;
+use wayland_client::globals::GlobalListContents;
+use wayland_client::protocol::wl_compositor::WlCompositor;
+use wayland_client::protocol::wl_registry;
+use wayland_client::protocol::wl_registry::WlRegistry;
+use wayland_client::protocol::wl_seat::WlSeat;
+use wayland_client::protocol::wl_shm::WlShm;
+use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1;
+use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1;
 use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_shell_v1::ZwlrLayerShellV1;
 
 /// Empty state type for the Wayland event queue.

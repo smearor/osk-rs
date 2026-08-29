@@ -1,6 +1,7 @@
 //! Semantic type of a key, determining its behavior when pressed.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Semantic type of a key, determining its behavior when pressed.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

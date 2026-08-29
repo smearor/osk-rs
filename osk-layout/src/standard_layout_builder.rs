@@ -1,8 +1,9 @@
 //! Builder for predefined standard layouts (QWERTZ, QWERTY, AZERTY, Dvorak).
 
-use osk_core::{LayoutDef, SizeVariant};
-
-use crate::{LayoutBuilder, LayoutError};
+use crate::LayoutBuilder;
+use crate::LayoutError;
+use osk_core::LayoutDef;
+use osk_core::SizeVariant;
 
 /// Builder for predefined standard layouts (QWERTZ, QWERTY, AZERTY, Dvorak).
 ///

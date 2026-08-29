@@ -1,8 +1,10 @@
 //! A single key definition in the keyboard grid.
 
-use serde::{Deserialize, Serialize};
-
-use crate::{KeyCode, KeyShape, KeyType};
+use crate::KeyCode;
+use crate::KeyShape;
+use crate::KeyType;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A single key definition in the keyboard grid.
 ///

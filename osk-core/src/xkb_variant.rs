@@ -3,7 +3,8 @@
 //! Represents the variant component of an XKB keyboard layout specification,
 //! e.g. `nodeadkeys`, `intl`, `qwerty`.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// XKB layout variant.
 ///

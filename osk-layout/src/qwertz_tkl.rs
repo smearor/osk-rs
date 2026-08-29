@@ -4,7 +4,11 @@
 //! It defines 6 rows of keys with correct evdev keycodes for a German
 //! QWERTZ keyboard with ISO L-shaped Enter key.
 
-use osk_core::{Key, LayoutDef, SizeVariant, XkbVariant, keycode};
+use osk_core::Key;
+use osk_core::LayoutDef;
+use osk_core::SizeVariant;
+use osk_core::XkbVariant;
+use osk_core::keycode;
 
 /// Build the hardcoded QWERTZ TKL layout definition.
 ///

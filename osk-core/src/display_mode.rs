@@ -1,6 +1,7 @@
 //! Display mode for the on-screen keyboard.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Display mode for the on-screen keyboard.
 ///

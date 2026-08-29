@@ -1,6 +1,7 @@
 //! Layout configuration section.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Layout configuration section.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

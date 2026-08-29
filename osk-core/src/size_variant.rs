@@ -1,6 +1,7 @@
 //! Size variant of the keyboard layout.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Size variant of the keyboard layout.
 ///
