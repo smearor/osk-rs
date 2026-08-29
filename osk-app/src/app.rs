@@ -104,6 +104,7 @@ pub fn run() {
         };
         info!("XKB keymap generated");
 
+        info!("Publishing keymap (size={} bytes)...", keymap_string.len());
         if let Err(e) = virtual_keyboard.publish_keymap(&keymap_string) {
             error!("Keymap setup failed: {e}");
             return;
