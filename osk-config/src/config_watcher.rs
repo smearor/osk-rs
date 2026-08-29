@@ -38,8 +38,7 @@ impl ConfigWatcher {
     /// Returns `ConfigError` if the watcher cannot be created or the
     /// config file path cannot be determined.
     pub fn new() -> Result<Self, ConfigError> {
-        let config_dir = dirs::config_dir()
-            .ok_or(ConfigError::ConfigDirNotFound)?;
+        let config_dir = dirs::config_dir().ok_or(ConfigError::ConfigDirNotFound)?;
         let path = config_dir.join("osk-rs").join("config.toml");
         Self::watching(path.to_str().unwrap_or(""))
     }

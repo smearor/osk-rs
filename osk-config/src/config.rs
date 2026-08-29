@@ -34,8 +34,7 @@ impl Config {
     /// Returns `ConfigError` if the config directory cannot be determined,
     /// or the file cannot be read or parsed.
     pub fn load() -> Result<Self, ConfigError> {
-        let config_dir = dirs::config_dir()
-            .ok_or(ConfigError::ConfigDirNotFound)?;
+        let config_dir = dirs::config_dir().ok_or(ConfigError::ConfigDirNotFound)?;
         let path = config_dir.join("osk-rs").join("config.toml");
         Self::load_from(path.to_str().unwrap_or(""))
     }

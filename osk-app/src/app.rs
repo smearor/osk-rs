@@ -10,6 +10,7 @@ use osk_input::ModifierState;
 use osk_input::VirtualKeyboard;
 use osk_input::WaylandVirtualKeyboard;
 use osk_layout::LayoutRegistry;
+use osk_layout::XkbLayoutParser;
 use osk_ui::OskWindow;
 use osk_wayland::WaylandContext;
 use std::cell::RefCell;
@@ -58,13 +59,7 @@ pub fn run() {
     info!("Using layout: {layout}, variant: {variant}, size: {size_variant}");
 
     // Build the layout using the layout registry
-    let layout_def = match LayoutRegistry::build_with_variant(layout.clone(), variant, size_variant) {
-        Ok(l) => l,
-        Err(e) => {
-            error!("Failed to build layout '{layout}': {e}, falling back to QWERTY TKL");
-            LayoutRegistry::build(XkbLayout::Us, SizeVariant::Tenkeyless80).unwrap()
-        }
-    };
+    let layout_def = LayoutRegistry::build_with_variant(layout.clone(), variant.clone(), size_variant).unwrap_or_default();
 
     let app = gtk4::Application::builder().application_id("org.example.OSK").build();
 
@@ -72,7 +67,8 @@ pub fn run() {
         info!("osk-rs shutting down — releasing resources");
     });
 
-    let layout_for_log = layout;
+    let layout_for_log = layout.clone();
+    let variant_for_keymap = variant.clone();
     app.connect_activate(move |app| {
         // Connect to Wayland and bind required globals
         let wayland = match WaylandContext::connect() {
@@ -87,10 +83,22 @@ pub fn run() {
         let vkbd_proxy = wayland.vkbd_manager.create_virtual_keyboard(&wayland.seat, &wayland.queue_handle, ());
         let mut virtual_keyboard = WaylandVirtualKeyboard::from_proxy(vkbd_proxy);
 
-        // Publish a minimal keymap (Phase 1: hardcoded XKB keymap string)
-        // TODO: Generate proper XKB keymap from layout in Phase 2
-        let keymap = include_str!("../assets/keymap_de.txt");
-        if let Err(e) = virtual_keyboard.publish_keymap(keymap) {
+        // Generate XKB keymap from the selected layout and variant
+        let keymap_string = match XkbLayoutParser::new() {
+            Ok(parser) => match parser.parse(&layout_for_log, &variant_for_keymap) {
+                Ok(keymap) => keymap.keymap_string,
+                Err(e) => {
+                    error!("XKB keymap generation failed for layout '{layout_for_log}': {e}");
+                    return;
+                }
+            },
+            Err(e) => {
+                error!("XKB parser initialization failed: {e}");
+                return;
+            }
+        };
+
+        if let Err(e) = virtual_keyboard.publish_keymap(&keymap_string) {
             error!("Keymap setup failed: {e}");
             return;
         }

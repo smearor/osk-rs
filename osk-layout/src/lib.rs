@@ -10,6 +10,7 @@ mod layout_sections;
 mod layouts;
 mod size_variant_builder;
 mod standard_layout_builder;
+mod xkb_parser;
 
 pub use error::LayoutError;
 pub use layout_builder::LayoutBuilder;
@@ -23,3 +24,6 @@ pub use layouts::Qwertz;
 pub use layouts::qwertz_tkl;
 pub use size_variant_builder::SizeVariantBuilder;
 pub use standard_layout_builder::StandardLayoutBuilder;
+pub use xkb_parser::KeySymEntry;
+pub use xkb_parser::XkbKeymap;
+pub use xkb_parser::XkbLayoutParser;

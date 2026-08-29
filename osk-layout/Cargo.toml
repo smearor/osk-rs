@@ -10,3 +10,4 @@ description = "XKB layout parsing and size variant builder for osk-rs"
 [dependencies]
 osk-core = { path = "../osk-core" }
 thiserror = { workspace = true }
+xkbcommon = { workspace = true }

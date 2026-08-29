@@ -1,14 +1,14 @@
 //! Builder for predefined standard layouts (QWERTZ, QWERTY, AZERTY, Dvorak).
 
+use crate::Azerty;
+use crate::Dvorak;
 use crate::LayoutBuilder;
 use crate::LayoutDefinition;
 use crate::LayoutError;
 use crate::LayoutSections;
-use crate::SizeVariantBuilder;
-use crate::Azerty;
-use crate::Dvorak;
 use crate::Qwerty;
 use crate::Qwertz;
+use crate::SizeVariantBuilder;
 use osk_core::LayoutDef;
 use osk_core::SizeVariant;
 use osk_core::XkbLayout;
