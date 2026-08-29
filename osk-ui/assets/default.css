@@ -34,3 +34,8 @@
     background: #4a9eff;
     color: #ffffff;
 }
+.key-preview-label {
+    font-size: 28px;
+    font-weight: bold;
+    padding: 12px 20px;
+}
