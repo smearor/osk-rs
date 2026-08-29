@@ -1,0 +1,14 @@
+[package]
+name = "osk-ipc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "D-Bus session bus service, Unix socket server, and signal handling for osk-rs"
+
+[dependencies]
+osk-core = { path = "../osk-core" }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+zbus = { workspace = true }

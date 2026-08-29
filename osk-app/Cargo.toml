@@ -1,0 +1,23 @@
+[package]
+name = "osk-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "osk-rs on-screen keyboard application — connects all modules"
+
+[dependencies]
+osk-config = { path = "../osk-config" }
+osk-core = { path = "../osk-core" }
+osk-detect = { path = "../osk-detect" }
+osk-hyprland = { path = "../osk-hyprland" }
+osk-input = { path = "../osk-input" }
+osk-ipc = { path = "../osk-ipc" }
+osk-layout = { path = "../osk-layout" }
+osk-ui = { path = "../osk-ui" }
+osk-wayland = { path = "../osk-wayland" }
+clap = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

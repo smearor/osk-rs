@@ -1,0 +1,13 @@
+[package]
+name = "osk-detect"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "LayoutDetector trait and auto-detection backend selection for osk-rs"
+
+[dependencies]
+osk-core = { path = "../osk-core" }
+osk-hyprland = { path = "../osk-hyprland" }
+thiserror = { workspace = true }

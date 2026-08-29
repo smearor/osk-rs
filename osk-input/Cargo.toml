@@ -1,0 +1,12 @@
+[package]
+name = "osk-input"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Virtual keyboard protocol client and modifier state machine for osk-rs"
+
+[dependencies]
+osk-core = { path = "../osk-core" }
+thiserror = { workspace = true }

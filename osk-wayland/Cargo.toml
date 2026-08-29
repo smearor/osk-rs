@@ -1,0 +1,12 @@
+[package]
+name = "osk-wayland"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Wayland client for osk-rs — layer-shell surface, registry bind, seat handling"
+
+[dependencies]
+osk-core = { path = "../osk-core" }
+thiserror = { workspace = true }

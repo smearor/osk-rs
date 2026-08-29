@@ -1,0 +1,12 @@
+[package]
+name = "osk-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "XKB layout parsing and size variant builder for osk-rs"
+
+[dependencies]
+osk-core = { path = "../osk-core" }
+thiserror = { workspace = true }

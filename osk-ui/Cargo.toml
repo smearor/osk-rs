@@ -1,0 +1,12 @@
+[package]
+name = "osk-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "GTK 4 rendering and touch hit-testing for osk-rs"
+
+[dependencies]
+osk-core = { path = "../osk-core" }
+thiserror = { workspace = true }
