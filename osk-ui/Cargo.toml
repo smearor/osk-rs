@@ -8,6 +8,7 @@ repository.workspace = true
 description = "GTK 4 rendering and touch hit-testing for osk-rs"
 
 [dependencies]
+osk-config = { path = "../osk-config" }
 osk-core = { path = "../osk-core" }
 osk-input = { path = "../osk-input" }
 thiserror = { workspace = true }

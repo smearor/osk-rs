@@ -1136,6 +1136,7 @@ dependencies = [
  "glib",
  "gtk4",
  "gtk4-layer-shell",
+ "osk-config",
  "osk-core",
  "osk-input",
  "thiserror",

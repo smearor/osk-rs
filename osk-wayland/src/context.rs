@@ -16,6 +16,7 @@ use wayland_client::globals::registry_queue_init;
 use wayland_client::protocol::wl_compositor::WlCompositor;
 use wayland_client::protocol::wl_seat::WlSeat;
 use wayland_client::protocol::wl_shm::WlShm;
+use wayland_protocols::wp::fractional_scale::v1::client::wp_fractional_scale_manager_v1::WpFractionalScaleManagerV1;
 use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1;
 use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_shell_v1::ZwlrLayerShellV1;
 
@@ -34,6 +35,8 @@ pub struct WaylandContext {
     pub layer_shell: ZwlrLayerShellV1,
     /// Virtual keyboard manager for creating virtual keyboard devices
     pub vkbd_manager: ZwpVirtualKeyboardManagerV1,
+    /// Fractional scale manager for HiDPI scaling (bound now, used later)
+    pub fractional_scale_manager: Option<WpFractionalScaleManagerV1>,
     /// The Wayland connection
     pub connection: Connection,
     /// The event queue handle
@@ -76,12 +79,16 @@ impl WaylandContext {
             .bind::<ZwpVirtualKeyboardManagerV1, _, _>(&queue_handle, 1..=1, ())
             .map_err(|_| WaylandError::ProtocolNotFound(WaylandProtocol::ZwpVirtualKeyboardManagerV1))?;
 
+        // Bind wp_fractional_scale_v1 if available (optional — for HiDPI)
+        let fractional_scale_manager = globals.bind::<WpFractionalScaleManagerV1, _, _>(&queue_handle, 1..=1, ()).ok();
+
         Ok(Self {
             compositor,
             seat,
             shm,
             layer_shell,
             vkbd_manager,
+            fractional_scale_manager,
             connection,
             queue_handle,
             globals: Arc::new(globals),

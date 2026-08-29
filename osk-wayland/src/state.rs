@@ -15,6 +15,7 @@ use wayland_client::protocol::wl_registry;
 use wayland_client::protocol::wl_registry::WlRegistry;
 use wayland_client::protocol::wl_seat::WlSeat;
 use wayland_client::protocol::wl_shm::WlShm;
+use wayland_protocols::wp::fractional_scale::v1::client::wp_fractional_scale_manager_v1::WpFractionalScaleManagerV1;
 use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1;
 use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1;
 use wayland_protocols_wlr::layer_shell::v1::client::zwlr_layer_shell_v1::ZwlrLayerShellV1;
@@ -32,6 +33,7 @@ delegate_noop!(WaylandState: WlShm);
 delegate_noop!(WaylandState: ZwlrLayerShellV1);
 delegate_noop!(WaylandState: ZwpVirtualKeyboardManagerV1);
 delegate_noop!(WaylandState: ZwpVirtualKeyboardV1);
+delegate_noop!(WaylandState: WpFractionalScaleManagerV1);
 
 impl Dispatch<WlRegistry, GlobalListContents> for WaylandState {
     fn event(
