@@ -30,6 +30,9 @@
 .key-enter {
     background: #3a3a3a;
 }
+.key-tall {
+    background: #3a3a3a;
+}
 .key-active {
     background: #4a9eff;
     color: #ffffff;

@@ -1,5 +1,6 @@
 //! A single key definition in the keyboard grid.
 
+use crate::CustomWidget;
 use crate::KeyCode;
 use crate::KeyShape;
 use crate::KeyType;
@@ -9,21 +10,25 @@ use serde::Serialize;
 /// A single key definition in the keyboard grid.
 ///
 /// Each key has a Linux evdev keycode, a display label, a geometric shape,
-/// a semantic type that determines how it behaves when pressed, and an
-/// optional CSS class for styling.
+/// a semantic type that determines how it behaves when pressed, an
+/// optional CSS class for styling, and an optional custom widget type
+/// for rich rendering (color picker, image, piano, etc.).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Key {
     /// Linux evdev keycode for this key
     pub keycode: KeyCode,
     /// Display label shown on the key cap
     pub label: String,
-    /// Geometric shape of the key (rectangular or L-shaped)
+    /// Geometric shape of the key (rectangular, L-shaped, or tall)
     pub shape: KeyShape,
     /// Semantic type of the key (alpha, modifier, special, custom)
     pub key_type: KeyType,
     /// Optional CSS class for custom styling
     #[serde(default)]
     pub css_class: Option<String>,
+    /// Optional custom widget for rich rendering (color picker, image, piano)
+    #[serde(default)]
+    pub custom: CustomWidget,
 }
 
 impl Key {
@@ -35,6 +40,7 @@ impl Key {
             shape: KeyShape::Rect { width_u: 1.0 },
             key_type: KeyType::Character,
             css_class: None,
+            custom: CustomWidget::None,
         }
     }
 
@@ -46,6 +52,7 @@ impl Key {
             shape: KeyShape::Rect { width_u },
             key_type: KeyType::Character,
             css_class: None,
+            custom: CustomWidget::None,
         }
     }
 
@@ -57,6 +64,7 @@ impl Key {
             shape: KeyShape::Rect { width_u },
             key_type: KeyType::Modifier,
             css_class: Some("key-modifier".to_string()),
+            custom: CustomWidget::None,
         }
     }
 
@@ -68,6 +76,7 @@ impl Key {
             shape: KeyShape::Rect { width_u },
             key_type: KeyType::Special,
             css_class: Some("key-special".to_string()),
+            custom: CustomWidget::None,
         }
     }
 
@@ -79,6 +88,7 @@ impl Key {
             shape: KeyShape::Rect { width_u: 1.0 },
             key_type: KeyType::Special,
             css_class: Some("key-fn".to_string()),
+            custom: CustomWidget::None,
         }
     }
 
@@ -90,6 +100,7 @@ impl Key {
             shape: KeyShape::Rect { width_u },
             key_type: KeyType::Special,
             css_class: Some("key-spacer".to_string()),
+            custom: CustomWidget::None,
         }
     }
 
@@ -101,6 +112,25 @@ impl Key {
             shape: KeyShape::LShape { top_width_u, bottom_width_u },
             key_type: KeyType::Special,
             css_class: Some("key-enter".to_string()),
+            custom: CustomWidget::None,
         }
+    }
+
+    /// Create a tall key spanning multiple grid rows (e.g. numpad +/Enter).
+    pub fn tall(label: &str, keycode: KeyCode, width_u: f32, height_rows: u32) -> Self {
+        Self {
+            keycode,
+            label: label.to_string(),
+            shape: KeyShape::Tall { width_u, height_rows },
+            key_type: KeyType::Special,
+            css_class: Some("key-tall".to_string()),
+            custom: CustomWidget::None,
+        }
+    }
+
+    /// Set a custom widget for this key.
+    pub fn with_custom(mut self, widget: CustomWidget) -> Self {
+        self.custom = widget;
+        self
     }
 }

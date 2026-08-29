@@ -4,6 +4,7 @@
 //! `osk-rs` crates: key definitions, key states, layout definitions, size
 //! variants, display modes, and input type hints.
 
+mod custom_widget;
 mod display_mode;
 mod input_type;
 mod key;
@@ -19,6 +20,7 @@ mod size_variant;
 mod xkb_layout;
 mod xkb_variant;
 
+pub use custom_widget::CustomWidget;
 pub use display_mode::DisplayMode;
 pub use input_type::InputType;
 pub use key::Key;

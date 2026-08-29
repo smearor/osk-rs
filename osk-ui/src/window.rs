@@ -1,5 +1,6 @@
 //! OSK window that renders the keyboard as a GTK 4 layer-shell surface.
 
+use crate::CustomKeyWidget;
 use crate::KeyVisualState;
 use crate::UiError;
 use gtk4::Application;
@@ -20,6 +21,7 @@ use gtk4_layer_shell::Layer;
 use gtk4_layer_shell::LayerShell;
 use osk_config::DisplayConfig;
 use osk_config::KeyboardHeight;
+use osk_core::CustomWidget;
 use osk_core::Key;
 use osk_core::KeyCode;
 use osk_core::KeyShape;
@@ -127,42 +129,76 @@ impl OskWindow {
 
     /// Render the keyboard layout into the grid.
     ///
-    /// Each key becomes a `gtk4::Button` with a touch gesture attached.
-    /// Touch events send key events immediately via the virtual keyboard,
-    /// with visual feedback deferred to the next idle cycle.
+    /// Each key becomes either a `gtk4::Button` (for standard rectangular
+    /// keys) or a `CustomKeyWidget` (for L-shaped, tall, or custom-content
+    /// keys). Touch events send key events immediately via the virtual
+    /// keyboard, with visual feedback deferred to the next idle cycle.
+    ///
+    /// L-shaped and tall keys span multiple grid rows as a single widget.
+    /// Spacers in following rows that would overlap are skipped.
     pub fn render_keys<V: VirtualKeyboard + 'static>(&self, keyboard: Rc<RefCell<V>>, modifier_state: Rc<RefCell<ModifierState>>) {
         while let Some(child) = self.grid.first_child() {
             self.grid.remove(&child);
         }
 
+        // Track which (row, col) positions are already occupied by multi-row widgets
+        let mut occupied: std::collections::HashSet<(i32, i32)> = std::collections::HashSet::new();
+
         for (row_idx, row) in self.layout.rows.iter().enumerate() {
             let mut col_idx: i32 = 0;
             for key in row.iter() {
-                let (button, popover, width) = self.create_key_button(key);
-                self.attach_touch_handlers(&button, &popover, key, keyboard.clone(), modifier_state.clone());
-                self.attach_long_press(&button, key.keycode);
+                // Skip positions already occupied by a multi-row widget from above
+                while occupied.contains(&(row_idx as i32, col_idx)) {
+                    col_idx += 1;
+                }
 
-                let col_span = width.ceil() as i32;
-                self.grid.attach(&button, col_idx, row_idx as i32, col_span.max(1), 1);
+                let width_u = key.shape.width_u();
+                let height_rows = key.shape.height_rows() as i32;
+                let col_span = width_u.ceil() as i32;
+
+                // L-shaped, tall, or custom widget keys use CustomKeyWidget
+                let needs_custom = matches!(key.shape, KeyShape::LShape { .. } | KeyShape::Tall { .. }) || key.custom != CustomWidget::None;
+
+                if needs_custom {
+                    let widget = CustomKeyWidget::new(&key.label, key.shape.clone(), key.custom.clone(), key.css_class.as_deref());
+
+                    let preview_label = Label::builder().label(&key.label).css_classes(["key-preview-label"]).build();
+                    let preview_popover = Popover::builder().child(&preview_label).autohide(false).build();
+                    preview_popover.set_parent(&widget);
+
+                    self.attach_touch_handlers_widget(&widget, &preview_popover, key, keyboard.clone(), modifier_state.clone());
+                    self.attach_long_press_widget(&widget, key.keycode);
+
+                    self.grid.attach(&widget, col_idx, row_idx as i32, col_span.max(1), height_rows.max(1));
+
+                    // Mark occupied positions in following rows
+                    for dr in 1..height_rows {
+                        for dc in 0..col_span.max(1) {
+                            occupied.insert((row_idx as i32 + dr, col_idx + dc));
+                        }
+                    }
+                } else {
+                    let (button, popover) = self.create_key_button(key);
+                    self.attach_touch_handlers(&button, &popover, key, keyboard.clone(), modifier_state.clone());
+                    self.attach_long_press(&button, key.keycode);
+
+                    self.grid.attach(&button, col_idx, row_idx as i32, col_span.max(1), 1);
+                }
+
                 col_idx += col_span.max(1);
             }
         }
     }
 
-    /// Create a GTK button for a key with CSS classes, visibility, and preview popover.
+    /// Create a GTK button for a standard rectangular key.
     ///
-    /// Returns the button, its preview popover, and the key width in grid units.
-    fn create_key_button(&self, key: &Key) -> (Button, Popover, f32) {
+    /// Returns the button and its preview popover.
+    fn create_key_button(&self, key: &Key) -> (Button, Popover) {
         let button = Button::builder().label(&key.label).css_classes(["key"]).build();
 
         if let Some(ref css_class) = key.css_class {
             button.add_css_class(css_class.as_str());
         }
-
-        let width = match &key.shape {
-            KeyShape::Rect { width_u } => *width_u,
-            KeyShape::LShape { top_width_u, .. } => *top_width_u,
-        };
 
         if key.label.is_empty() {
             button.set_visible(false);
@@ -172,7 +208,7 @@ impl OskWindow {
         let preview_popover = Popover::builder().child(&preview_label).autohide(false).build();
         preview_popover.set_parent(&button);
 
-        (button, preview_popover, width)
+        (button, preview_popover)
     }
 
     /// Attach touch press/release handlers to a key button.
@@ -201,7 +237,6 @@ impl OskWindow {
         let popover_pressed = popover.clone();
 
         gesture.connect_pressed(move |_, _n, _x, _y| {
-            // 1. Send key event IMMEDIATELY — before any UI work
             if key_type_pressed == KeyType::Modifier
                 && let Some(modifier) = keycode.modifier()
             {
@@ -215,7 +250,6 @@ impl OskWindow {
                 error!("Failed to send key event: {e}");
             }
 
-            // 2. Defer visual feedback to the next idle cycle
             let button_widget = button_pressed.clone();
             let key_type_idle = key_type_pressed.clone();
             let popover_idle = popover_pressed.clone();
@@ -227,7 +261,6 @@ impl OskWindow {
                 popover_idle.popup();
             });
 
-            // 3. Start key repeat timer (non-modifier keys only)
             if key_type_pressed != KeyType::Modifier {
                 Self::start_key_repeat(keyboard_pressed.clone(), keycode, repeat_source_pressed.clone());
             }
@@ -242,7 +275,6 @@ impl OskWindow {
         let popover_released = popover.clone();
 
         gesture.connect_released(move |_, _n, _x, _y| {
-            // Cancel key repeat timer
             if let Some(source_id) = repeat_source_released.borrow_mut().take() {
                 source_id.remove();
             }
@@ -265,7 +297,6 @@ impl OskWindow {
             let popover_idle = popover_released.clone();
             glib::idle_add_local_once(move || {
                 button_widget.remove_css_class(KeyVisualState::Pressed.css_class());
-                // Keep key-active for CapsLock while locked
                 if key_type_idle == KeyType::Modifier
                     && let Some(modifier) = keycode.modifier()
                     && modifier != Modifier::CapsLock
@@ -277,6 +308,92 @@ impl OskWindow {
         });
 
         button.add_controller(gesture);
+    }
+
+    /// Attach touch press/release handlers to a custom key widget.
+    ///
+    /// Works like `attach_touch_handlers` but for `CustomKeyWidget` instead of `Button`.
+    /// Uses `set_pressed` for visual feedback instead of CSS class manipulation.
+    fn attach_touch_handlers_widget<V: VirtualKeyboard + 'static>(
+        &self,
+        widget: &CustomKeyWidget,
+        popover: &Popover,
+        key: &Key,
+        keyboard: Rc<RefCell<V>>,
+        modifier_state: Rc<RefCell<ModifierState>>,
+    ) {
+        let gesture = GestureClick::builder().touch_only(true).build();
+        let repeat_source: Rc<RefCell<Option<SourceId>>> = Rc::new(RefCell::new(None));
+        let keycode = key.keycode;
+        let key_type = key.key_type.clone();
+
+        let keyboard_pressed = keyboard.clone();
+        let modifier_state_pressed = modifier_state.clone();
+        let widget_pressed = widget.clone();
+        let key_type_pressed = key_type.clone();
+        let repeat_source_pressed = repeat_source.clone();
+        let popover_pressed = popover.clone();
+
+        gesture.connect_pressed(move |_, _n, _x, _y| {
+            if key_type_pressed == KeyType::Modifier
+                && let Some(modifier) = keycode.modifier()
+            {
+                modifier_state_pressed.borrow_mut().press(modifier);
+                if let Err(e) = keyboard_pressed.borrow_mut().send_modifiers(&modifier_state_pressed.borrow()) {
+                    error!("Failed to send modifier state: {e}");
+                }
+            }
+
+            if let Err(e) = keyboard_pressed.borrow_mut().send_key(keycode, KeyState::Pressed) {
+                error!("Failed to send key event: {e}");
+            }
+
+            let widget_idle = widget_pressed.clone();
+            let popover_idle = popover_pressed.clone();
+            glib::idle_add_local_once(move || {
+                widget_idle.set_pressed(true);
+                popover_idle.popup();
+            });
+
+            if key_type_pressed != KeyType::Modifier {
+                Self::start_key_repeat(keyboard_pressed.clone(), keycode, repeat_source_pressed.clone());
+            }
+        });
+
+        let keyboard_released = keyboard.clone();
+        let modifier_state_released = modifier_state.clone();
+        let widget_released = widget.clone();
+        let key_type_released = key_type.clone();
+        let repeat_source_released = repeat_source.clone();
+        let popover_released = popover.clone();
+
+        gesture.connect_released(move |_, _n, _x, _y| {
+            if let Some(source_id) = repeat_source_released.borrow_mut().take() {
+                source_id.remove();
+            }
+
+            if key_type_released == KeyType::Modifier
+                && let Some(modifier) = keycode.modifier()
+            {
+                modifier_state_released.borrow_mut().release(modifier);
+                if let Err(e) = keyboard_released.borrow_mut().send_modifiers(&modifier_state_released.borrow()) {
+                    error!("Failed to send modifier state: {e}");
+                }
+            }
+
+            if let Err(e) = keyboard_released.borrow_mut().send_key(keycode, KeyState::Released) {
+                error!("Failed to send key release: {e}");
+            }
+
+            let widget_idle = widget_released.clone();
+            let popover_idle = popover_released.clone();
+            glib::idle_add_local_once(move || {
+                widget_idle.set_pressed(false);
+                popover_idle.popdown();
+            });
+        });
+
+        widget.add_controller(gesture);
     }
 
     /// Start a key repeat timer for a non-modifier key.
@@ -316,6 +433,15 @@ impl OskWindow {
             debug!("Long press detected on keycode {:?}", keycode);
         });
         button.add_controller(long_press);
+    }
+
+    /// Attach a long-press gesture to a custom key widget.
+    fn attach_long_press_widget(&self, widget: &CustomKeyWidget, keycode: KeyCode) {
+        let long_press = GestureLongPress::builder().touch_only(true).build();
+        long_press.connect_pressed(move |_, _x, _y| {
+            debug!("Long press detected on keycode {:?}", keycode);
+        });
+        widget.add_controller(long_press);
     }
 
     /// Show the window.

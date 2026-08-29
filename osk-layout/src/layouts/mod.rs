@@ -110,7 +110,8 @@ pub trait LayoutDefinition {
     /// Numpad aligned to main_block rows — 5 rows.
     ///
     /// Each row contains the numpad keys for that row, preceded by a spacer
-    /// for separation from the nav cluster.
+    /// for separation from the nav cluster. The `+` and Enter keys are tall
+    /// keys spanning two rows.
     fn numpad() -> KeyGrid {
         vec![
             // Row 0: NumLock, /, *, -
@@ -121,37 +122,31 @@ pub trait LayoutDefinition {
                 Key::special("*", keycode::KEY_KPASTERISK, 1.0),
                 Key::special("-", keycode::KEY_KPMINUS, 1.0),
             ],
-            // Row 1: 7, 8, 9, +
+            // Row 1: 7, 8, 9, + (tall — spans rows 1-2)
             vec![
                 Key::spacer(0.5),
                 Key::char("7", keycode::KEY_KP7),
                 Key::char("8", keycode::KEY_KP8),
                 Key::char("9", keycode::KEY_KP9),
-                Key::special("+", keycode::KEY_KPPLUS, 1.0),
+                Key::tall("+", keycode::KEY_KPPLUS, 1.0, 2),
             ],
-            // Row 2: 4, 5, 6
+            // Row 2: 4, 5, 6 (+ already spans from row 1)
             vec![
                 Key::spacer(0.5),
                 Key::char("4", keycode::KEY_KP4),
                 Key::char("5", keycode::KEY_KP5),
                 Key::char("6", keycode::KEY_KP6),
-                Key::spacer(1.0),
             ],
-            // Row 3: 1, 2, 3, Enter
+            // Row 3: 1, 2, 3, Enter (tall — spans rows 3-4)
             vec![
                 Key::spacer(0.5),
                 Key::char("1", keycode::KEY_KP1),
                 Key::char("2", keycode::KEY_KP2),
                 Key::char("3", keycode::KEY_KP3),
-                Key::special("⏎", keycode::KEY_KPENTER, 1.0),
+                Key::tall("⏎", keycode::KEY_KPENTER, 1.0, 2),
             ],
-            // Row 4: 0, .
-            vec![
-                Key::spacer(0.5),
-                Key::char_w("0", keycode::KEY_KP0, 2.0),
-                Key::char(".", keycode::KEY_KPDOT),
-                Key::spacer(1.0),
-            ],
+            // Row 4: 0, . (Enter already spans from row 3)
+            vec![Key::spacer(0.5), Key::char_w("0", keycode::KEY_KP0, 2.0), Key::char(".", keycode::KEY_KPDOT)],
         ]
         .into()
     }

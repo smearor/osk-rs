@@ -21,6 +21,7 @@ authors = ["Andreas Schaeffer <hanack@nooblounge.net>"]
 repository = "https://github.com/smearor/osk-rs"
 
 [workspace.dependencies]
+cairo-rs = "0.22"
 clap = { version = "4", features = ["derive"] }
 dirs = "6"
 gdk4 = "0.11"

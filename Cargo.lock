@@ -1192,6 +1192,7 @@ dependencies = [
 name = "osk-ui"
 version = "0.1.0"
 dependencies = [
+ "cairo-rs",
  "gdk4",
  "glib",
  "gtk4",

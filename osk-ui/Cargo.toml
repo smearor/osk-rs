@@ -12,6 +12,7 @@ osk-config = { path = "../osk-config" }
 osk-core = { path = "../osk-core" }
 osk-input = { path = "../osk-input" }
 thiserror = { workspace = true }
+cairo-rs = { workspace = true }
 gdk4 = { workspace = true }
 glib = { workspace = true }
 gtk4 = { workspace = true }
