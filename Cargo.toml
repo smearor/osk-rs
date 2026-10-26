@@ -23,7 +23,7 @@ repository = "https://github.com/smearor/osk-rs"
 [workspace.dependencies]
 cairo-rs = "0.22"
 clap = { version = "4", features = ["derive"] }
-dirs = "6"
+dirs = "7"
 gdk4 = "0.11"
 gdk4-wayland = { version = "0.11", features = ["wayland_crate"] }
 gio = "0.22"
